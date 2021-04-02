@@ -157,8 +157,6 @@ int main(int argc, const char *argv[])
             detKeypointsModern(keypoints, imgGray, detectorType, false);
         
 
-        continue;
-
 
         // optional : limit number of keypoints (helpful for debugging and learning)
         bool bLimitKpts = false;
@@ -191,6 +189,8 @@ int main(int argc, const char *argv[])
 
         cout << "#6 : EXTRACT DESCRIPTORS done" << endl;
 
+
+        continue;
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
