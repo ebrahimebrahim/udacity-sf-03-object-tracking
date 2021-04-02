@@ -1,0 +1,10 @@
+I did not want to include the data here in my copy of the repo.
+Get it from the original assignments here:
+https://github.com/udacity/SFND_Camera
+
+For more original sources, yolov3.weights comes from
+https://pjreddie.com/media/files/yolov3.weights
+and yolov3.cfg comes from
+https://github.com/pjreddie/darknet/blob/master/cfg/yolov3.cfg
+and coco.names comes from
+https://github.com/pjreddie/darknet/blob/master/data/coco.names
