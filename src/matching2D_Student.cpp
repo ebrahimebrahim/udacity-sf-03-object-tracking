@@ -12,26 +12,39 @@ void matchDescriptors(std::vector<cv::KeyPoint> &kPtsSource, std::vector<cv::Key
     bool crossCheck = false;
     cv::Ptr<cv::DescriptorMatcher> matcher;
 
+    cv::Mat descSource2, descRef2; // Copies of descSource and descRef whose format might be adjusted if FLANN is used
+
     if (matcherType.compare("MAT_BF") == 0)
     {
         int normType = cv::NORM_HAMMING;
         matcher = cv::BFMatcher::create(normType, crossCheck);
+        descSource2 = descSource;
+        descRef2 = descRef;
     }
     else if (matcherType.compare("MAT_FLANN") == 0)
     {
-        // ...
+        matcher = cv::DescriptorMatcher::create(cv::DescriptorMatcher::FLANNBASED);
+        if (descSource.type() != CV_32F) {
+            descSource.convertTo(descSource2, CV_32F);
+            descRef.convertTo(descRef2, CV_32F);
+        }
     }
 
     // perform matching task
     if (selectorType.compare("SEL_NN") == 0)
     { // nearest neighbor (best match)
 
-        matcher->match(descSource, descRef, matches); // Finds the best match for each descriptor in desc1
+        matcher->match(descSource2, descRef2, matches); // Finds the best match for each descriptor in desc1
     }
     else if (selectorType.compare("SEL_KNN") == 0)
     { // k nearest neighbors (k=2)
 
-        // ...
+        vector<vector<cv::DMatch>> knn_matches;
+        matcher->knnMatch(descSource2, descRef2, knn_matches, 2);
+
+        for (auto knn_match : knn_matches)
+            if (knn_match[0].distance < 0.8 * knn_match[1].distance)
+                matches.push_back(knn_match[0]);
     }
 }
 

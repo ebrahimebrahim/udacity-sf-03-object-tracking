@@ -190,7 +190,6 @@ int main(int argc, const char *argv[])
         cout << "#6 : EXTRACT DESCRIPTORS done" << endl;
 
 
-        continue;
 
         if (dataBuffer.size() > 1) // wait until at least two images have been processed
         {
@@ -211,6 +210,7 @@ int main(int argc, const char *argv[])
 
             cout << "#7 : MATCH KEYPOINT DESCRIPTORS done" << endl;
 
+            continue;
             
             /* TRACK 3D OBJECT BOUNDING BOXES */
 
