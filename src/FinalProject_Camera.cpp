@@ -22,6 +22,52 @@
 
 using namespace std;
 
+
+
+// This has been copied from an earlier exercise
+void showLidarTopview(std::vector<LidarPoint> &lidarPoints, cv::Size worldSize, cv::Size imageSize)
+{
+    // create topview image
+    cv::Mat topviewImg(imageSize, CV_8UC3, cv::Scalar(0, 0, 0));
+
+    // plot Lidar points into image
+    for (auto it = lidarPoints.begin(); it != lidarPoints.end(); ++it)
+    {
+        float xw = (*it).x; // world position in m with x facing forward from sensor
+        float yw = (*it).y; // world position in m with y facing left from sensor
+
+        int y = (-xw * imageSize.height / worldSize.height) + imageSize.height;
+        int x = (-yw * imageSize.height / worldSize.height) + imageSize.width / 2;
+
+        float zw = (*it).z; // world position in m with y facing left from sensor
+        if(zw > -1.40){       
+
+            float val = it->x;
+            float maxVal = worldSize.height;
+            int red = min(255, (int)(255 * abs((val - maxVal) / maxVal)));
+            int green = min(255, (int)(255 * (1 - abs((val - maxVal) / maxVal))));
+            cv::circle(topviewImg, cv::Point(x, y), 5, cv::Scalar(0, green, red), -1);
+        }
+    }
+
+    // plot distance markers
+    float lineSpacing = 2.0; // gap between distance markers
+    int nMarkers = floor(worldSize.height / lineSpacing);
+    for (size_t i = 0; i < nMarkers; ++i)
+    {
+        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
+        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0));
+    }
+
+    // display image
+    string windowName = "Top-View Perspective of LiDAR data";
+    cv::namedWindow(windowName, 2);
+    cv::imshow(windowName, topviewImg);
+    cv::waitKey(0); // wait for key to be pressed
+}
+
+
+
 /* MAIN PROGRAM */
 int main(int argc, const char *argv[])
 {
@@ -129,7 +175,7 @@ int main(int argc, const char *argv[])
         clusterLidarWithROI((dataBuffer.end()-1)->boundingBoxes, (dataBuffer.end() - 1)->lidarPoints, shrinkFactor, P_rect_00, R_rect_00, RT);
 
         // Visualize 3D objects
-        bVis = true;
+        bVis = false;
         if(bVis)
         {
             show3DObjects((dataBuffer.end()-1)->boundingBoxes, cv::Size(4.0, 20.0), cv::Size(2000, 2000), true);
@@ -220,8 +266,6 @@ int main(int argc, const char *argv[])
             //// EOF STUDENT ASSIGNMENT
 
 
-            // continue; // TODO: REMOVE THIS TO PROCEED
-
             // store matches in current data frame
             (dataBuffer.end()-1)->bbMatches = bbBestMatches;
 
@@ -250,6 +294,7 @@ int main(int argc, const char *argv[])
                 // compute TTC for current match
                 if( currBB->lidarPoints.size()>0 && prevBB->lidarPoints.size()>0 ) // only compute TTC if we have Lidar points
                 {
+
                     //// STUDENT ASSIGNMENT
                     //// TASK FP.2 -> compute time-to-collision based on Lidar data (implement -> computeTTCLidar)
                     double ttcLidar; 
@@ -279,7 +324,9 @@ int main(int argc, const char *argv[])
                         cv::namedWindow(windowName, 4);
                         cv::imshow(windowName, visImg);
                         cout << "Press key to continue to next frame" << endl;
+                        showLidarTopview((dataBuffer.end()-1)->lidarPoints,cv::Size(4.0, 20.0), cv::Size(2000, 2000),false);
                         cv::waitKey(0);
+
                     }
                     bVis = false;
 
