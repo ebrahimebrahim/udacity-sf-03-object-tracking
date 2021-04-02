@@ -1,3 +1,4 @@
 images/KITTI
 dat/yolo/*.weights
 build/
+.vscode
