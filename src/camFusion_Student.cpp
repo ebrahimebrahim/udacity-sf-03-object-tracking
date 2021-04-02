@@ -159,5 +159,35 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
 
 void matchBoundingBoxes(std::vector<cv::DMatch> &matches, std::map<int, int> &bbBestMatches, DataFrame &prevFrame, DataFrame &currFrame)
 {
-    // ...
+    for (const auto & prev_bbox : prevFrame.boundingBoxes) {
+
+        const BoundingBox * curr_bbox_with_most_matches = nullptr; // The bounding box in the current frame that contains the most keypoints matched with prev_bbox
+        int most_matches = 0; // The number of keypoint matches associated to the above
+   
+        for (const auto & curr_bbox : currFrame.boundingBoxes) {
+            int num_matches = 0;
+            for (const auto & match : matches) {
+                if ( 
+                    prev_bbox.roi.contains(prevFrame.keypoints[match.queryIdx].pt) &&
+                    curr_bbox.roi.contains(currFrame.keypoints[match.trainIdx].pt)
+                )
+                    ++num_matches;
+            }
+            if (num_matches > most_matches) {
+                most_matches = num_matches;
+                curr_bbox_with_most_matches = &curr_bbox;
+            }
+        }
+
+        if (most_matches > 0) {
+            bbBestMatches.insert({prev_bbox.boxID, curr_bbox_with_most_matches->boxID});    
+        }
+
+    }
+
+    // std::cout << "FINISHED MATCH BBOXES. FOUND " << bbBestMatches.size() << " MATCHES OF BBOXES.\n";
+    // for (auto bbm : bbBestMatches)
+    //     std::cout << "\t" << bbm.first << " - " << bbm.second << std::endl;
+
+    
 }
