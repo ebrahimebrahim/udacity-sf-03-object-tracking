@@ -4,6 +4,7 @@
 #include <numeric>
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/imgproc/imgproc.hpp>
+#include <opencv2/features2d.hpp>
 
 #include "camFusion.hpp"
 #include "dataStructures.h"
@@ -171,12 +172,73 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
 
 }
 
+// Sorts list in place and then returns median
+double median(std::vector<double>& a) {
+    std::sort(a.begin(), a.end());
+    if (a.size()%2) // if odd length
+        return a[(a.size()-1)/2];
+    else 
+        return (a[int(a.size()/2 - 1)] + a[int(a.size()/2)]) / 2.0;
+}
 
 // Compute time-to-collision (TTC) based on keypoint correspondences in successive images
 void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, 
-                      std::vector<cv::DMatch> kptMatches, double frameRate, double &TTC, cv::Mat *visImg)
+                      std::vector<cv::DMatch> kptMatches, double frameRate, double &TTC, cv::Mat *visImgPrev, cv::Mat *visImgCurr)
 {
-    // ...
+    // vector such that i^th component is ptr to kpt in kptsCurr that matches kptsPrev[i], or nullptr if there isn't one.
+    std::vector<cv::KeyPoint*> match_map;
+    for (int i = 0; i < kptsPrev.size(); ++i) {
+        bool match_found = false;
+        for (const auto& match : kptMatches) {
+            if (match.queryIdx == i) {
+                match_map.push_back(&kptsCurr[match.trainIdx]);
+                match_found = true;
+                break;
+            }
+        }
+        if (!match_found)
+            match_map.push_back(nullptr);
+    }
+    assert(match_map.size() == kptsPrev.size());
+    // (I just realized that I could have double looped through the list of matches instead of making match_map, but whatever this is fine)
+
+    std::vector<double> TTCs; // vector of TTC estimates we are going to collect for individual pairs of matches
+    TTCs.reserve(kptsPrev.size() * kptsPrev.size());
+    for (int i = 0; i < kptsPrev.size(); ++i) {
+        if (match_map[i]==nullptr)
+            continue;
+        for (int j = 0; j < kptsPrev.size(); ++j) {
+            if (match_map[j]==nullptr || i==j)
+                continue;
+            const auto& p0 = kptsPrev[i].pt;
+            const auto& p1 = match_map[i]->pt;
+            const auto& q0 = kptsPrev[j].pt;
+            const auto& q1 = match_map[j]->pt;
+            const double h0 = cv::norm(p0-q0);
+            const double h1 = cv::norm(p1-q1);
+            if (h0==h1) // if we are about to divide by 0
+                TTCs.push_back(std::numeric_limits<double>::max()); // it's okay to use max b/c we will take median
+            else
+                TTCs.push_back(1/(frameRate * ((h1/h0) - 1)));
+        }
+    }
+    
+    // For robustness to garbage points, take the median ttc
+    TTC = median(TTCs);
+    
+    // std::cout << "TTCs: ";
+    // for (auto ttc : TTCs) std::cout << ttc << ", ";
+    // std::cout << std::endl;
+    
+
+    // visualize results
+    cv::Mat matchImg = visImgCurr->clone();
+    cv::drawMatches(*visImgPrev, kptsPrev, *visImgCurr, kptsCurr, kptMatches,
+                    matchImg, cv::Scalar::all(-1), cv::Scalar::all(-1), vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+
+    string windowName = "Matching keypoints between two camera images (best 50)";
+    cv::namedWindow(windowName, 7);
+    cv::imshow(windowName, matchImg);
 }
 
 
