@@ -138,7 +138,37 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
-    // ...
+    std::vector<cv::DMatch> matches_within_box;
+    for (const auto& match : kptMatches)
+        if (boundingBox.roi.contains(kptsCurr[match.trainIdx].pt))
+            matches_within_box.push_back(match);
+
+    std::vector<double> match_dists;
+    match_dists.reserve(matches_within_box.size());
+    for (const auto & match : matches_within_box) 
+        match_dists.push_back(cv::norm(kptsPrev[match.queryIdx].pt - kptsCurr[match.trainIdx].pt));
+
+    double sum_of_dists = 0;
+    for (auto d : match_dists) sum_of_dists += d;
+    double mean_dist = sum_of_dists / match_dists.size();
+
+    for (int i = 0; i < matches_within_box.size(); ++i) {
+        if (abs(match_dists[i] - mean_dist) < 20) { // Skip matches with distance too much greater than the mean
+            boundingBox.keypoints.push_back(kptsCurr[matches_within_box[i].trainIdx]);
+            boundingBox.kptMatches.push_back(matches_within_box[i]);
+        }
+    }
+
+    // output to help with some debugging
+    // std::cout << "clusterKptMatchesWithROI complete.\n";
+    // std::cout << "Number of matches in frame: " << kptMatches.size() << std::endl;
+    // std::cout << "Number of matches that are within bounding box: " << matches_within_box.size() <<std::endl;
+    // std::cout << "Number of matches in box that are also not removed as outliers: " << boundingBox.kptMatches.size() << std::endl;
+    // std::cout << "Match distances:\n  ";
+    // for (auto d : match_dists) std::cout << d << ", ";
+    // std::cout << std::endl;
+    // std::cout << "Mean dist: " << mean_dist <<std::endl;
+
 }
 
 
