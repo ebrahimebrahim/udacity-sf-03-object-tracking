@@ -154,7 +154,7 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
     double mean_dist = sum_of_dists / match_dists.size();
 
     for (int i = 0; i < matches_within_box.size(); ++i) {
-        if (abs(match_dists[i] - mean_dist) < 20) { // Skip matches with distance too much greater than the mean
+        if (abs(match_dists[i] - mean_dist) < 25) { // Skip matches with distance too much greater than the mean
             boundingBox.keypoints.push_back(kptsCurr[matches_within_box[i].trainIdx]);
             boundingBox.kptMatches.push_back(matches_within_box[i]);
         }
