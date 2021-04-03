@@ -150,10 +150,50 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 }
 
 
+// Given a list of lidar points, return the x coordinate of the lidar point with the least x coordinate
+// This will try to be robust to outliers by considering only points whose x coordinate is within d of the next n closest points
+LidarPoint* least_x_robust(std::vector<LidarPoint>& points, float d, int n) {
+    
+    // Sort points ascending by x coordinate
+    std::sort(points.begin(), points.end(), [](const LidarPoint& a, const LidarPoint& b) {return a.x < b.x;});
+    
+    for (int i = 0; i < points.size() - n ; ++i) {
+        
+        // If points[i+1] up through points[i+n] are within d of points[i], then we return points[i]
+        
+        bool all_within_d = true;
+        for (int j = 1; j<=n; ++j)
+            if (abs(points[i+j-1].x - points[i+j].x) >= d)
+                all_within_d = false;
+        
+        if (all_within_d)
+            return &(points[i]);
+
+    }
+
+    // Default to just giving the point with the least x coordinate
+    return &(points[0]);
+}
+
+
 void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
                      std::vector<LidarPoint> &lidarPointsCurr, double frameRate, double &TTC)
 {
-    // ...
+    const float d = 0.005; const int n = 3;
+    LidarPoint* least_x_prev = least_x_robust(lidarPointsPrev, d, n);
+    LidarPoint* least_x_curr = least_x_robust(lidarPointsCurr, d, n);
+
+    // Output for debugging
+    // std::cout << "Point xs:\n  ";
+    // for (int i=0; i<lidarPointsCurr.size() && i<5;++i) {
+    //     std::cout << lidarPointsCurr[i].x;
+    //     if (i>0) std::cout << " (" << lidarPointsCurr[i].x - lidarPointsCurr[i-1].x << ")";
+    //     std::cout << ", "; 
+    // }
+    // std::cout << "\nLeast x chosen: " << least_x_curr->x << "\n";
+
+    double dx = least_x_prev->x - least_x_curr->x; // The amount by which x has decreased. A decreasing x makes this positive.
+    TTC = least_x_curr->x / (dx * frameRate);
 }
 
 
