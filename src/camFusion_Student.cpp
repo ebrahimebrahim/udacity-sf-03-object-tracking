@@ -151,7 +151,8 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
 
 
 // Given a list of lidar points, return the x coordinate of the lidar point with the least x coordinate
-// This will try to be robust to outliers by considering only points whose x coordinate is within d of the next n closest points
+// This will try to be robust to outliers by considering only points whose x coordinate is part of a chain of length n+1 of
+// points whose x coordinates are succesively within d of one another
 LidarPoint* least_x_robust(std::vector<LidarPoint>& points, float d, int n) {
     
     // Sort points ascending by x coordinate
@@ -159,7 +160,7 @@ LidarPoint* least_x_robust(std::vector<LidarPoint>& points, float d, int n) {
     
     for (int i = 0; i < points.size() - n ; ++i) {
         
-        // If points[i+1] up through points[i+n] are within d of points[i], then we return points[i]
+        // If points[i] up through points[i+n] are successively within d of each other, then we return points[i]
         
         bool all_within_d = true;
         for (int j = 1; j<=n; ++j)
