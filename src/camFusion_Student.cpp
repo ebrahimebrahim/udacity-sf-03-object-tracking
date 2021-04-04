@@ -277,13 +277,13 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     LidarPoint* least_x_curr = least_x_robust(lidarPointsCurr, d, n);
 
     // Output for debugging
-    // std::cout << "Point xs:\n  ";
-    // for (int i=0; i<lidarPointsCurr.size() && i<5;++i) {
-    //     std::cout << lidarPointsCurr[i].x;
-    //     if (i>0) std::cout << " (" << lidarPointsCurr[i].x - lidarPointsCurr[i-1].x << ")";
-    //     std::cout << ", "; 
-    // }
-    // std::cout << "\nLeast x chosen: " << least_x_curr->x << "\n";
+    std::cout << "Lidar point xs:\n  ";
+    for (int i=0; i<lidarPointsCurr.size() && i<5;++i) {
+        std::cout << lidarPointsCurr[i].x;
+        if (i>0) std::cout << " (" << lidarPointsCurr[i].x - lidarPointsCurr[i-1].x << ")";
+        std::cout << ", "; 
+    }
+    std::cout << "\nLeast x chosen: " << least_x_curr->x << "\n";
 
     double dx = least_x_prev->x - least_x_curr->x; // The amount by which x has decreased. A decreasing x makes this positive.
     TTC = least_x_curr->x / (dx * frameRate);
