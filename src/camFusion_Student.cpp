@@ -236,7 +236,7 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     cv::drawMatches(*visImgPrev, kptsPrev, *visImgCurr, kptsCurr, kptMatches,
                     matchImg, cv::Scalar::all(-1), cv::Scalar::all(-1), vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-    string windowName = "Matching keypoints between two camera images (best 50)";
+    string windowName = "Matching keypoints between two camera images";
     cv::namedWindow(windowName, 7);
     cv::imshow(windowName, matchImg);
 }
@@ -277,13 +277,13 @@ void computeTTCLidar(std::vector<LidarPoint> &lidarPointsPrev,
     LidarPoint* least_x_curr = least_x_robust(lidarPointsCurr, d, n);
 
     // Output for debugging
-    std::cout << "Lidar point xs:\n  ";
-    for (int i=0; i<lidarPointsCurr.size() && i<5;++i) {
-        std::cout << lidarPointsCurr[i].x;
-        if (i>0) std::cout << " (" << lidarPointsCurr[i].x - lidarPointsCurr[i-1].x << ")";
-        std::cout << ", "; 
-    }
-    std::cout << "\nLeast x chosen: " << least_x_curr->x << "\n";
+    // std::cout << "Lidar point xs:\n  ";
+    // for (int i=0; i<lidarPointsCurr.size() && i<5;++i) {
+    //     std::cout << lidarPointsCurr[i].x;
+    //     if (i>0) std::cout << " (" << lidarPointsCurr[i].x - lidarPointsCurr[i-1].x << ")";
+    //     std::cout << ", "; 
+    // }
+    // std::cout << "\nLeast x chosen: " << least_x_curr->x << "\n";
 
     double dx = least_x_prev->x - least_x_curr->x; // The amount by which x has decreased. A decreasing x makes this positive.
     TTC = least_x_curr->x / (dx * frameRate);
