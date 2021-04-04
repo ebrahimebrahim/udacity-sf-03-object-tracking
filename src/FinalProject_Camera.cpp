@@ -275,6 +275,11 @@ int main(int argc, const char *argv[])
                         sprintf(str, "TTC Lidar : %f s, TTC Camera : %f s", ttcLidar, ttcCamera);
                         putText(visImg, str, cv::Point2f(80, 50), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255));
 
+                        std::string estimate_ttc_text = "Manual post-hoc estimated TTC: ";
+                        float t = float(imgIndex-1) / 17.0;
+                        estimate_ttc_text += std::to_string( 10.9*t + 12.6*(1.0-t) ); // see report/task_fp_5.md for an explanation
+                        putText(visImg, estimate_ttc_text.c_str(), cv::Point2f(80, 100), cv::FONT_HERSHEY_PLAIN, 2, cv::Scalar(0,0,255));
+
                         string windowName = "Final Results : TTC";
                         cv::namedWindow(windowName, 4);
                         cv::imshow(windowName, visImg);

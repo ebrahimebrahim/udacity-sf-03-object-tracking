@@ -58,6 +58,30 @@ void showLidarTopview(std::vector<LidarPoint> &lidarPoints, cv::Size worldSize, 
     // create topview image
     cv::Mat topviewImg(imageSize, CV_8UC3, cv::Scalar(0, 0, 0));
 
+
+    // plot distance markers
+    float lineSpacing = 1.0; // gap between distance markers
+    int nMarkers = floor(worldSize.height / lineSpacing);
+    for (size_t i = 0; i < nMarkers; ++i)
+    {
+        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
+        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0),4);
+    }
+    lineSpacing = 0.5;
+    nMarkers = floor(worldSize.height / lineSpacing);
+    for (size_t i = 0; i < nMarkers; ++i)
+    {
+        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
+        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0),2);
+    }
+    lineSpacing = 0.25;
+    nMarkers = floor(worldSize.height / lineSpacing);
+    for (size_t i = 0; i < nMarkers; ++i)
+    {
+        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
+        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0),1);
+    }
+
     // plot Lidar points into image
     for (auto it = lidarPoints.begin(); it != lidarPoints.end(); ++it)
     {
@@ -78,19 +102,10 @@ void showLidarTopview(std::vector<LidarPoint> &lidarPoints, cv::Size worldSize, 
         }
     }
 
-    // plot distance markers
-    float lineSpacing = 2.0; // gap between distance markers
-    int nMarkers = floor(worldSize.height / lineSpacing);
-    for (size_t i = 0; i < nMarkers; ++i)
-    {
-        int y = (-(i * lineSpacing) * imageSize.height / worldSize.height) + imageSize.height;
-        cv::line(topviewImg, cv::Point(0, y), cv::Point(imageSize.width, y), cv::Scalar(255, 0, 0),2);
-    }
-
     // display frame number
     std::string frame_number_text = "Frame number: ";
     frame_number_text += std::to_string(frame_number);
-    putText(topviewImg, frame_number_text.c_str(), cv::Point2f(100, 300), cv::FONT_HERSHEY_PLAIN, 8, cv::Scalar(255,255,255), 2);
+    putText(topviewImg, frame_number_text.c_str(), cv::Point2f(100, 900), cv::FONT_HERSHEY_PLAIN, 8, cv::Scalar(255,255,255), 2);
 
     // display image
     string windowName = "Top-View Perspective of LiDAR data";
