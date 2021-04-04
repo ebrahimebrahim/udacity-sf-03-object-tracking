@@ -136,6 +136,15 @@ void show3DObjects(std::vector<BoundingBox> &boundingBoxes, cv::Size worldSize, 
 }
 
 
+// Sorts list in place and then returns median
+double median(std::vector<double>& a) {
+    std::sort(a.begin(), a.end());
+    if (a.size()%2) // if odd length
+        return a[(a.size()-1)/2];
+    else 
+        return (a[int(a.size()/2 - 1)] + a[int(a.size()/2)]) / 2.0;
+}
+
 // associate a given bounding box with the keypoints it contains
 void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, std::vector<cv::DMatch> &kptMatches)
 {
@@ -149,12 +158,10 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
     for (const auto & match : matches_within_box) 
         match_dists.push_back(cv::norm(kptsPrev[match.queryIdx].pt - kptsCurr[match.trainIdx].pt));
 
-    double sum_of_dists = 0;
-    for (auto d : match_dists) sum_of_dists += d;
-    double mean_dist = sum_of_dists / match_dists.size();
+    double median_dist = median(match_dists);
 
     for (int i = 0; i < matches_within_box.size(); ++i) {
-        if (abs(match_dists[i] - mean_dist) < 25) { // Skip matches with distance too much greater than the mean
+        if (abs(match_dists[i] - median_dist) < 2) { // Skip matches with distance too much different from the median
             boundingBox.keypoints.push_back(kptsCurr[matches_within_box[i].trainIdx]);
             boundingBox.kptMatches.push_back(matches_within_box[i]);
         }
@@ -168,18 +175,11 @@ void clusterKptMatchesWithROI(BoundingBox &boundingBox, std::vector<cv::KeyPoint
     // std::cout << "Match distances:\n  ";
     // for (auto d : match_dists) std::cout << d << ", ";
     // std::cout << std::endl;
-    // std::cout << "Mean dist: " << mean_dist <<std::endl;
+    // std::cout << "Median dist: " << median_dist <<std::endl;
 
 }
 
-// Sorts list in place and then returns median
-double median(std::vector<double>& a) {
-    std::sort(a.begin(), a.end());
-    if (a.size()%2) // if odd length
-        return a[(a.size()-1)/2];
-    else 
-        return (a[int(a.size()/2 - 1)] + a[int(a.size()/2)]) / 2.0;
-}
+
 
 // Compute time-to-collision (TTC) based on keypoint correspondences in successive images
 void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPoint> &kptsCurr, 
@@ -226,19 +226,22 @@ void computeTTCCamera(std::vector<cv::KeyPoint> &kptsPrev, std::vector<cv::KeyPo
     // For robustness to garbage points, take the median ttc
     TTC = median(TTCs);
     
+    // Output for debugging
     // std::cout << "TTCs: ";
     // for (auto ttc : TTCs) std::cout << ttc << ", ";
     // std::cout << std::endl;
     
 
     // visualize results
-    cv::Mat matchImg = visImgCurr->clone();
-    cv::drawMatches(*visImgPrev, kptsPrev, *visImgCurr, kptsCurr, kptMatches,
-                    matchImg, cv::Scalar::all(-1), cv::Scalar::all(-1), vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
+    if (visImgCurr!=nullptr && visImgPrev!=nullptr) {
+        cv::Mat matchImg = visImgCurr->clone();
+        cv::drawMatches(*visImgPrev, kptsPrev, *visImgCurr, kptsCurr, kptMatches,
+                        matchImg, cv::Scalar::all(-1), cv::Scalar::all(-1), vector<char>(), cv::DrawMatchesFlags::DRAW_RICH_KEYPOINTS);
 
-    string windowName = "Matching keypoints between two camera images";
-    cv::namedWindow(windowName, 7);
-    cv::imshow(windowName, matchImg);
+        string windowName = "Matching keypoints between two camera images";
+        cv::namedWindow(windowName, 7);
+        cv::imshow(windowName, matchImg);
+    }
 }
 
 
