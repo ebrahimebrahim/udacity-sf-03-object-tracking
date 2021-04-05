@@ -237,7 +237,7 @@ int print_rows(std::ostream & os, std::string detectorType, std::string descript
                     //// EOF STUDENT ASSIGNMENT
 
                     // finally print row
-                    std::string sep = ", ";
+                    std::string sep = ",";
                     os << detectorType << sep;
                     os << descriptorType << sep;
                     os << imgIndex << sep;
@@ -261,7 +261,7 @@ int main() {
     std::ostream & output_target = std::cout;
 
     // write header
-    output_target << "detector, descriptor, frame index, ttc_lidar, ttc_camera" << std::endl;
+    output_target << "detector,descriptor,frameindex,ttc_lidar,ttc_camera" << std::endl;
 
 
     std::vector<std::string> detectors = {"SHITOMASI", "HARRIS", "FAST", "BRISK", "ORB"}; // TODO put SIFT back in, but don't use with ORB descriptor
